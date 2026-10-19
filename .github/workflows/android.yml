@@ -25,6 +25,42 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace
 
+      - name: Validate APK
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          echo "Using build-tools: $BT"
+
+          echo "::group::Signature"
+          "$BT/apksigner" verify --verbose --print-certs "$APK"
+          echo "::endgroup::"
+
+          echo "::group::Package info"
+          "$BT/aapt2" dump badging "$APK" | grep -E "^(package|sdkVersion|targetSdkVersion|application-label|launchable-activity|uses-permission)"
+          echo "::endgroup::"
+
+          echo "::group::Permissions"
+          "$BT/aapt2" dump permissions "$APK" | tee permissions.txt
+          echo "::endgroup::"
+
+          # The app should request nothing beyond the signature-level permission
+          # that androidx.core adds for its own internal broadcast receivers.
+          unexpected=$(grep -E "^uses-permission" permissions.txt \
+            | grep -v "com.supplytrack.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" || true)
+          if [ -n "$unexpected" ]; then
+            echo "::error::Unexpected permissions requested:"
+            echo "$unexpected"
+            exit 1
+          fi
+
+          {
+            echo "### APK validation"
+            echo "- SHA-256: \`$(sha256sum "$APK" | cut -d' ' -f1)\`"
+            echo "- Size: $(du -h "$APK" | cut -f1)"
+            echo "- Signature: verified"
+            echo "- Permissions requested: none beyond the app's internal signature permission"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
