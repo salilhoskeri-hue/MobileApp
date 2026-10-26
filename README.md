@@ -25,11 +25,14 @@ Sample data is loaded on first launch so you can try the app right away.
 
 ## Getting the APK
 
-Every push runs the **Android build** GitHub Actions workflow. It runs the unit tests and builds a debug APK.
+**Direct download of the latest build:**
+[SupplyTrack-debug.apk](https://github.com/salilhoskeri-hue/MobileApp/releases/latest/download/SupplyTrack-debug.apk)
+(also on the repo's [Releases](https://github.com/salilhoskeri-hue/MobileApp/releases) page).
+Every merge into `main` rebuilds it automatically.
 
-1. Open the workflow run in the repo's **Actions** tab.
-2. Download the `SupplyTrack-debug-apk` artifact.
-3. Unzip it and install `app-debug.apk` on your phone. You need to allow installs from unknown sources.
+Install it on an Android 8.0+ phone or emulator. You need to allow installs from unknown sources.
+
+Builds of other branches are attached to their workflow run in the **Actions** tab, as the `SupplyTrack-debug-apk` artifact (a zip containing `app-debug.apk`).
 
 ## Building locally
 
