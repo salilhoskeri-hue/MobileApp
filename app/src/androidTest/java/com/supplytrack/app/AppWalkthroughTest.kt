@@ -11,7 +11,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
-import androidx.test.espresso.Espresso.closeSoftKeyboard
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Rule
@@ -113,6 +114,19 @@ class AppWalkthroughTest {
         compose.waitUntil(TIMEOUT_MS) {
             compose.onAllNodesWithText(text).fetchSemanticsNodes().isEmpty()
         }
+    }
+
+    /**
+     * Hides the on-screen keyboard through the window's insets controller.
+     * (Espresso's closeSoftKeyboard needs window focus, which a slow emulator
+     * can briefly lose to system dialogs.)
+     */
+    private fun closeSoftKeyboard() {
+        compose.activityRule.scenario.onActivity { activity ->
+            WindowCompat.getInsetsController(activity.window, activity.window.decorView)
+                .hide(WindowInsetsCompat.Type.ime())
+        }
+        compose.waitForIdle()
     }
 
     private fun screenshot(name: String) {
