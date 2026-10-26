@@ -38,6 +38,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -263,12 +264,19 @@ private fun AdjustStockDialog(
         title = { Text(if (receiving) "Receive stock" else "Issue stock") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                FormField(qty, { qty = it }, "Quantity ($unit)", keyboardType = KeyboardType.Number, isError = qty.isNotEmpty() && !valid)
+                FormField(
+                    qty, { qty = it }, "Quantity ($unit)", Modifier.testTag("adjust_qty"),
+                    keyboardType = KeyboardType.Number, isError = qty.isNotEmpty() && !valid,
+                )
                 FormField(reason, { reason = it }, "Reason (optional)")
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(qtyValue!!, reason.trim()) }, enabled = valid) {
+            TextButton(
+                onClick = { onConfirm(qtyValue!!, reason.trim()) },
+                enabled = valid,
+                modifier = Modifier.testTag("adjust_confirm"),
+            ) {
                 Text(if (receiving) "Receive" else "Issue")
             }
         },
