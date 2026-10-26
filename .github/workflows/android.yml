@@ -105,7 +105,8 @@ jobs:
             api-level: 36
             branch: screenshots-android-16
           - android: "17"
-            api-level: 37
+            # Android 17's SDK packages are published as "android-37.0".
+            api-level: "37.0"
             branch: screenshots-android-17
     timeout-minutes: 45
     permissions:
@@ -123,15 +124,6 @@ jobs:
       - name: Build app and test APKs
         run: ./gradlew assembleDebug assembleDebugAndroidTest --stacktrace
 
-      - name: List available SDK packages for this Android version
-        if: matrix.api-level >= 37
-        run: |
-          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          for ch in 0 1 3; do
-            echo "== channel $ch =="
-            "$SDKM" --list --channel=$ch 2>/dev/null | grep -E "^ *(platforms|system-images);android-(3[6-9]|[A-Z])" | sort -u || true
-          done
-
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -144,6 +136,7 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api-level }}
+          system-image-api-level: ${{ matrix.api-level }}
           arch: x86_64
           target: google_apis
           profile: pixel_6
