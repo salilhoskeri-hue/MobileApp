@@ -3,7 +3,7 @@ name: Android build
 on:
   push:
     branches-ignore:
-      - screenshots
+      - "screenshots*"
   pull_request:
   workflow_dispatch:
 
@@ -92,8 +92,22 @@ jobs:
           This is a debug build signed with a test key, for trying the app. It requests no permissions."
 
   ui-test:
-    name: UI walkthrough on emulator
+    name: UI walkthrough (Android ${{ matrix.android }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - android: "14"
+            api-level: 34
+            branch: screenshots
+          - android: "16"
+            api-level: 36
+            branch: screenshots-android-16
+          - android: "17"
+            # Android 17's SDK packages are published as "android-37.0".
+            api-level: "37.0"
+            branch: screenshots-android-17
     timeout-minutes: 45
     permissions:
       contents: write
@@ -121,7 +135,8 @@ jobs:
       - name: Run walkthrough on emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          api-level: ${{ matrix.api-level }}
+          system-image-api-level: ${{ matrix.api-level }}
           arch: x86_64
           target: google_apis
           profile: pixel_6
@@ -146,11 +161,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SupplyTrack-screenshots
+          name: SupplyTrack-screenshots-android-${{ matrix.android }}
           path: screenshots/
           if-no-files-found: ignore
 
-      # Also publish them to a `screenshots` branch so they can be browsed on GitHub.
+      # Also publish them to a branch (screenshots, screenshots-android-16, ...)
+      # so they can be browsed on GitHub.
       - name: Publish screenshots branch
         if: always() && github.event_name == 'push'
         run: |
@@ -159,7 +175,7 @@ jobs:
           {
             echo "# SupplyTrack screenshots"
             echo
-            echo "Captured on an Android emulator (Pixel 6, API 34) by the UI walkthrough test,"
+            echo "Captured on an Android ${{ matrix.android }} emulator (Pixel 6, API ${{ matrix.api-level }}) by the UI walkthrough test,"
             echo "commit ${GITHUB_SHA::7} on \`${GITHUB_REF_NAME}\`."
             echo
             for f in *.png; do
@@ -169,9 +185,9 @@ jobs:
               echo
             done
           } > README.md
-          git init -q -b screenshots
+          git init -q -b "${{ matrix.branch }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -q -m "Screenshots for ${GITHUB_SHA::7}"
-          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" screenshots
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "${{ matrix.branch }}"
