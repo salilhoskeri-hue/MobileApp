@@ -24,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -75,6 +76,7 @@ fun ShipmentEditScreen(
                         selected = f.type == type,
                         onClick = { viewModel.setType(type) },
                         shape = SegmentedButtonDefaults.itemShape(index = i, count = types.size),
+                        modifier = Modifier.testTag("type_${type.name.lowercase()}"),
                     ) {
                         Text(if (type == ShipmentType.INBOUND) "Inbound (purchase)" else "Outbound (sale)")
                     }
@@ -93,10 +95,12 @@ fun ShipmentEditScreen(
                 selected = products.firstOrNull { it.id == f.productId },
                 optionLabel = { "${it.name} (${it.sku}) · ${it.quantity} ${it.unit}" },
                 onSelect = viewModel::selectProduct,
+                modifier = Modifier.testTag("shipment_product"),
                 isError = err && f.productId == null,
             )
             FormField(
                 f.quantity, { v -> viewModel.update { it.copy(quantity = v) } }, "Quantity *",
+                Modifier.testTag("shipment_quantity"),
                 keyboardType = KeyboardType.Number, isError = err && (f.quantityValue ?: 0) <= 0,
             )
             if (inbound && suppliers.isNotEmpty()) {
@@ -112,6 +116,7 @@ fun ShipmentEditScreen(
                 FormField(
                     f.partner, { v -> viewModel.update { it.copy(partner = v) } },
                     if (inbound) "Supplier *" else "Customer *",
+                    Modifier.testTag("shipment_partner"),
                     isError = err && f.partner.isBlank(),
                 )
             }

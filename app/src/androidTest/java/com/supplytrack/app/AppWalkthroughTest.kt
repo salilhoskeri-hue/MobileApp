@@ -76,13 +76,14 @@ class AppWalkthroughTest {
         waitForText("PO-00001 received", substring = true)
 
         // A sale larger than the stock on hand can be created but not dispatched.
-        compose.onNodeWithText("Shipment").performClick()
+        compose.onNodeWithTag("new_shipment").performClick()
         waitForText("New shipment")
-        compose.onNodeWithText("Outbound (sale)").performClick()
-        compose.onNodeWithText("Product *").performClick()
-        compose.onNodeWithText("Hex nuts M8 (HW-1002) · 18 box").performClick()
-        compose.onNodeWithText("Quantity *").performTextInput("50")
-        compose.onNodeWithText("Customer *").performTextInput("Test Retail Co")
+        compose.onNodeWithTag("type_outbound").performClick()
+        compose.onNodeWithTag("shipment_product").performClick()
+        waitForText("Hex nuts M8 (HW-1002) · 18 box")
+        compose.onNodeWithText("Hex nuts M8 (HW-1002) · 18 box", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("shipment_quantity").performTextInput("50")
+        compose.onNodeWithTag("shipment_partner").performTextInput("Test Retail Co")
         closeSoftKeyboard()
         screenshot("new_shipment_form")
         compose.onNodeWithText("Create sales shipment").performScrollTo().performClick()
@@ -116,6 +117,8 @@ class AppWalkthroughTest {
 
     private fun screenshot(name: String) {
         compose.waitForIdle()
+        // Give the emulator's software renderer time to put the latest frame on screen.
+        Thread.sleep(1_000)
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val bitmap = instrumentation.uiAutomation.takeScreenshot() ?: return
         val dir = File(instrumentation.targetContext.filesDir, "screenshots").apply { mkdirs() }
